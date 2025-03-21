@@ -9,18 +9,21 @@ import { CreateUserDto, UserDetailDTO } from './dto/user.dto';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {} // for using function in Service
-  // @Get()
-  // async getUser(): Promise<ResponseData<UserDetailDTO>> {
-  //   const userList = (await this.usersService.getAllUsers()).map((user) => ({
-  //     ...user.toObject(),
-  //     postIDList: user.postIDList.map((postID) => postID.toString()),
-  //   }));
-  //   return new ResponseData<UserDetailDTO>(userList, 200, HttpMessage.SUCCESS);
-  // }
 
   @Post()
-  createUser(@Body() body: CreateUserDto) {
-    return this.usersService.createUser(body.name, body.email, body.password);
+  async createUser(@Body() body: CreateUserDto): Promise<ResponseData<String>> {
+    const user = await this.usersService.createUser(
+      body.name,
+      body.email,
+      body.password,
+    );
+    return user
+      ? new ResponseData<String>('Successful Created', 201, HttpMessage.SUCCESS)
+      : new ResponseData<String>(
+          'This email has been used',
+          409,
+          HttpMessage.ERROR,
+        );
   }
 
   @Get('/detail')

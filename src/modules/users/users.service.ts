@@ -7,8 +7,9 @@ import { from } from 'rxjs';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
-  async getUserWithPosts(userId: string) {
-    return this.userModel.findById(userId).populate('postIDList').exec();
+  async isUserIdExist(userId: string) {
+    let user = await this.userModel.findById(userId);
+    return user ? true : false;
   }
   async updateUserPost(userId: string, postId: unknown) {
     return this.userModel.findByIdAndUpdate(
@@ -42,10 +43,23 @@ export class UsersService {
       .exec();
     return user.length > 0 ? user : null;
   }
+
   async getAllUsers() {
     return this.userModel.find();
   }
-  async createUser(name, email, password) {
-    return this.userModel.create({ name, email, password });
+  async createUser(name, email, password): Promise<Boolean> {
+    //return true if created, else return false
+
+    //find existing user
+    let user = await this.userModel.find({ email });
+    if (user) return false;
+    this.userModel.create({ name, email, password });
+    return true;
+  }
+
+  async checkPostUserOwner(userId, postId): Promise<Boolean> {
+    let user = await this.userModel.findById(userId);
+    if (!user) return false;
+    return user.postIDList.includes(postId);
   }
 }
